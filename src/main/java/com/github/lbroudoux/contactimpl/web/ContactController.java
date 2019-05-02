@@ -36,7 +36,7 @@ public class ContactController {
     @RequestMapping(value = "/{userId}/contacts", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Contact> createContact(@RequestBody Contact contact, @PathVariable("userId") String userId) {
         if (contact != null) {
-            return new ResponseEntity<>(contact, HttpStatus.CREATED);
+            return new ResponseEntity<>(contact, HttpStatus.OK);
         }
         return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
     }
