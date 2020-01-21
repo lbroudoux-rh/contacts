@@ -1,0 +1,102 @@
+---
+openapi: 3.0.2
+info:
+  title: Contacts API
+  description: Simple contact management API
+  termsOfService: http://example.com/terms
+  version: "1.0"
+paths:
+  /api/v1/{userId}/contacts:
+    summary: Managing user contacts
+    description: Operations for dealing with user contacts
+    get:
+      summary: List contacts
+      operationId: ListContacts
+      responses:
+        200:
+          description: User contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+              examples:
+                musketeers:
+                  value:
+                  - firstname: Laurent
+                    lastname: Broudoux
+                    email: lbroudou@redhat.com
+                    iban: "123456789"
+                  - firstname: Yacine
+                    lastname: Kheddache
+                    email: yacine@redhat.com
+                    iban: "987654321"
+                  - firstname: Patrice
+                    lastname: Lachance
+                    email: patrice.lachance@socgen.com
+                    iban: azertyuiop
+    post:
+      summary: Create Contact
+      operationId: CreateContact
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+            examples:
+              laurent:
+                value:
+                  firstname: Laurent
+                  lastname: Broudoux
+                  email: lbroudou@redhat.com
+                  iban: "1234567890"
+        required: true
+      responses:
+        201:
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+              examples:
+                laurent:
+                  value:
+                    firstname: Laurent
+                    lastname: Broudoux
+                    email: lbroudou@redhat.com
+                    iban: "1234567890"
+    parameters:
+    - name: userId
+      in: path
+      description: User id
+      required: true
+      schema:
+        type: string
+      examples:
+        laurent:
+          value: laurent
+        musketeers:
+          value: laurent
+components:
+  schemas:
+    Contact:
+      title: Root Type for Contact
+      description: The root of the Contact type's schema.
+      type: object
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        iban:
+          type: string
+      example: |-
+        {
+            "firstname": "John",
+            "lastname": "Doe",
+            "email": "john@doe.com",
+            "iban": "azertyuiop"
+        }
