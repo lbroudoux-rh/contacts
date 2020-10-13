@@ -1,0 +1,95 @@
+metadata:
+  name: contacts-impl
+projects:
+  - name: contacts-impl
+    source:
+      location: 'https://github.com/lbroudoux-rh/contacts-impl'
+      type: git
+      branch: master
+components:
+  - id: redhat/java11/latest
+    type: chePlugin
+  - id: redhat/dependency-analytics/latest
+    type: chePlugin
+  - mountSources: true
+    endpoints:
+      - name: health-checks-endpoint
+        port: 8080
+    memoryLimit: 512Mi
+    type: dockerimage
+    volumes:
+      - name: m2
+        containerPath: /home/jboss/.m2
+    image: >-
+      registry.redhat.io/codeready-workspaces/plugin-java11-rhel8@sha256:e9deebbc320d28a2f425e858ed3dcf87fc67a40f6654d6eb7c2b6feea022b7d6
+    alias: maven
+    env:
+      - value: >-
+          -XX:MaxRAMPercentage=50.0 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+          -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true
+          -Xms20m -Djava.security.egd=file:/dev/./urandom
+          -Duser.home=/home/jboss
+        name: JAVA_OPTS
+      - value: $(JAVA_OPTS)
+        name: MAVEN_OPTS
+apiVersion: 1.0.0
+commands:
+  - name: 1. Build
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: mvn clean install
+        component: maven
+  - name: 2. Build and run
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: 'mvn clean install && mvn spring-boot:run'
+        component: maven
+  - name: 3. Run in debug mode
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: 'mvn -DskipTests spring-boot:debug'
+        component: maven
+  - name: 4. Run tests
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: mvn verify
+        component: maven
+  - name: 5. Log into deployment cluster
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: |
+          echo
+          echo "Before you can deploy this application to an openshift cluster,"
+          echo "you must run 'oc login ...' in the maven terminal."
+          echo
+        component: maven
+  - name: 6. Deploy to OpenShift
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/contacts-impl'
+        type: exec
+        command: >-
+          mvn fabric8:deploy -Popenshift -DskipTests
+          -Dvertx.disableDnsResolver=true
+        component: maven
+  - name: Attach remote debugger
+    actions:
+      - referenceContent: |
+          {
+          "version": "0.2.0",
+          "configurations": [
+          {
+              "type": "java",
+              "request": "attach",
+              "name": "Debug (Attach)",
+              "hostName": "localhost",
+              "port": 5005
+          }
+          ]
+          }
+        type: vscode-launch
